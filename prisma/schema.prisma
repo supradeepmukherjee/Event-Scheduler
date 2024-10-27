@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  clerkUserID    String        @unique
+  email          String        @unique
+  username       String?        @unique
+  name           String?
+  imgUrl         String?
+  events         Event[]       @relation("UserEvents")
+  bookings       Booking[]     @relation("UserBookings")
+  availability   Availability?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Event {
+  id        String   @id @default(uuid())
+  title     String
+  desc      String?
+  duration  Int
+  userID    String
+  user      User     @relation("UserEvents", fields: [userID], references: [id])
+  bookings  Booking[]
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Booking {
+  id             String   @id @default(uuid())
+  eventID        String
+  event          Event    @relation(fields: [eventID], references: [id], onDelete: Cascade)
+  userID         String
+  user           User     @relation("UserBookings", fields: [userID], references: [id])
+  name           String
+  email          String
+  additionalInfo String?
+  start          DateTime
+  end            DateTime
+  meetLink       String
+  googleEventID  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Availability {
+  id        String            @id @default(uuid())
+  userID    String            @unique
+  user      User              @relation(fields: [userID], references: [id])
+  days      DayAvailability[]
+  timeGap   Int
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model DayAvailability {
+  id             String       @id @default(uuid())
+  availabilityID String
+  day            DayOfWeek
+  startTime      DateTime
+  endTime        DateTime
+  availability   Availability @relation(fields: [availabilityID], references: [id], onDelete: Cascade)
+}
+
+enum DayOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
