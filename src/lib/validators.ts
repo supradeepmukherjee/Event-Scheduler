@@ -9,4 +9,30 @@ const eventSchema = z.object({
     isPrivate: z.boolean()
 })
 
-export { usernameSchema, eventSchema }
+const daySchema = z.object({
+    isAvailable: z.boolean(),
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+}).refine(
+    d => {
+        if (d.isAvailable) return d.startTime! < d.endTime!
+        return true
+    },
+    {
+        message: 'End Time can\'t be before Start Time',
+        path: ['endTime']
+    }
+)
+
+const availabilitySchema = z.object({
+    monday: daySchema,
+    tuesday: daySchema,
+    wednesday: daySchema,
+    thursday: daySchema,
+    friday: daySchema,
+    saturday: daySchema,
+    sunday: daySchema,
+    timeGap: z.number().min(0, 'Time Gap can\'t be negative').int()
+})
+
+export { usernameSchema, eventSchema, availabilitySchema, daySchema }
