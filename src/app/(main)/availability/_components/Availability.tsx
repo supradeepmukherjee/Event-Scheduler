@@ -1,10 +1,11 @@
 'use client'
 
-import { Availability } from "@/actions/availability"
+import { Availability, updateAvailability } from "@/actions/availability"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import useFetch from "@/hooks/useFetch"
 import { availabilitySchema } from "@/lib/validators"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, FieldErrorsImpl, useForm } from "react-hook-form"
@@ -18,8 +19,10 @@ const Availability_ = ({ initialData }: { initialData: Availability }) => {
     resolver: zodResolver(availabilitySchema),
     defaultValues: { ...initialData }
   })
+  const { error, fn, loading } = useFetch(updateAvailability)
+  const onSubmit = async (data: Availability) => await fn(data)
   return (
-    <form>
+    <form onSubmit={handleSubmit(onSubmit)}>
       {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
         .map(d => (
           <div key={d} className="flex items-center space-x-4 mb-4">
@@ -94,14 +97,19 @@ const Availability_ = ({ initialData }: { initialData: Availability }) => {
           Minimum Gap before booking (minutes)
         </span>
         <Input type="number" {...register('timeGap', { valueAsNumber: true })} className="w-32" />
-        {errors?.timeGap &&(
+        {errors?.timeGap && (
           <span className="text-red-500 text-sm ml-2">
             {errors?.timeGap.message}
           </span>
         )}
       </div>
-      <Button type="submit" className="mt-5">
-        Update Availability
+      {error && (
+        <div className="text-red-500 text-sm">
+          {error.message}
+        </div>
+      )}
+      <Button type="submit" className="mt-5" disabled={loading}>
+        {loading ? 'Updating...' : 'Update Availability'}
       </Button>
     </form>
   )
