@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { DayOfWeek } from "@prisma/client";
 
 type DayAvailability = {
     isAvailable: boolean
@@ -45,4 +46,46 @@ export async function getUserAvailability() {
             }
         })
     return availability
+}
+
+export async function updateAvailability(data: Availability) {
+    const { userId } = auth()
+    if (!userId) throw new Error('Unauthorized')
+    const user = await prisma.user.findUnique({
+        where: { clerkUserID: userId },
+        include: { availability: true }
+    })
+    if (!user) throw new Error('User not Found')
+    const availability = Object.entries(data)
+        .filter(([key]) => key !== 'timeGap')
+        .flatMap(([day, val]) => {
+            const { isAvailable, startTime, endTime } = val as DayAvailability;
+            if (isAvailable) {
+                const baseDate = new Date().toISOString().split('T')[0]
+                return [{
+                    day: DayOfWeek[day.toUpperCase() as keyof typeof DayOfWeek],
+                    startTime: new Date(`${baseDate}T${startTime}:00Z`),
+                    endTime: new Date(`${baseDate}T${endTime}:00Z`),
+                }]
+            }
+            return []
+        })
+    if (user.availability) await prisma.availability.update({
+        data: {
+            timeGap: data.timeGap,
+            days: {
+                deleteMany: {},
+                create: availability
+            }
+        },
+        where: { id: user.availability.id }
+    })
+    else await prisma.availability.create({
+        data: {
+            userID: user.id,
+            timeGap: data.timeGap,
+            days: { create: availability }
+        },
+    })
+    return { success: true }
 }
