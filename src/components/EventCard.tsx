@@ -5,7 +5,7 @@ import useFetch from "@/hooks/useFetch";
 import { Event } from "@prisma/client";
 import { Link, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { MouseEvent, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 
@@ -38,8 +38,11 @@ const EventCard = (
     if (window?.confirm('Are you sure you want to DELETE this Event?')) await fn(event.id)
     refresh()
   }
+  const clickHandler = (e: MouseEvent) => {
+    if ((e.target as HTMLElement).tagName !== 'BUTTON' && (e.target as HTMLElement).tagName !== 'SVG') window?.open(`${window?.location.origin}/${username}/${event.id}`, '_blank')
+  }
   return (
-    <Card className="flex flex-col justify-between cursor-pointer">
+    <Card className="flex flex-col justify-between cursor-pointer" onClick={clickHandler}>
       <CardHeader>
         <CardTitle className="text-2xl">
           {event.title}
