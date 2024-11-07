@@ -41,3 +41,22 @@ export async function delEvent(id: string) {
     await prisma.event.delete({ where: { id } })
     return { success: true }
 }
+
+export async function getEventDetails(username: string, id: string) {
+    const event = await prisma.event.findFirst({
+        where: {
+            id,
+            user: { username }
+        },
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                    imgUrl: true,
+                }
+            }
+        }
+    })
+    return event
+}
