@@ -35,4 +35,12 @@ const availabilitySchema = z.object({
     timeGap: z.number().min(0, 'Time Gap can\'t be negative').int()
 })
 
-export { usernameSchema, eventSchema, availabilitySchema, daySchema }
+const bookingSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().email('Invalid Email'),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
+    time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format'),
+    additionalInfo: z.string().optional()
+})
+
+export { usernameSchema, eventSchema, availabilitySchema, daySchema, bookingSchema }
