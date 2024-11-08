@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { DayOfWeek } from "@prisma/client";
+import { addDays, addMinutes, format, isBefore, parseISO, startOfDay } from 'date-fns'
 
 type DayAvailability = {
     isAvailable: boolean
@@ -88,4 +89,61 @@ export async function updateAvailability(data: Availability) {
         },
     })
     return { success: true }
+}
+
+export async function getEventAvailability(id: string) {
+    const event = await prisma.event.findUnique({
+        where: { id },
+        include: {
+            user: {
+                include: {
+                    availability: {
+                        select: {
+                            days: true,
+                            timeGap: true,
+                        }
+                    },
+                    bookings: {
+                        select: {
+                            start: true,
+                            end: true
+                        }
+                    }
+                }
+            }
+        }
+    })
+    if (!event || !event.user.availability) return []
+    const { availability, bookings } = event.user
+    const startDate = startOfDay(new Date())
+    const endDate = addDays(startDate, 30)
+    const availableDates = []
+    for (let i = startDate; i <= endDate; i = addDays(i, 1)) {
+        const day = format(i, 'EEEE').toUpperCase()
+        if (availability.days.find(d => d.day === day)) {
+            const date = format(i, 'yyyy-MM-dd')
+            const slots = []
+            let currentTime = parseISO(`${date}T${startDate.toISOString().slice(11, 16)}`)
+            const endTime = parseISO(`${date}T${endDate.toISOString().slice(11, 16)}`)
+            const now = new Date()
+            if (format(now, 'yyyy-MM-dd') === date)
+                currentTime = isBefore(currentTime, now) ? addMinutes(now, availability.timeGap) : currentTime
+            while (currentTime < endTime) {
+                const slotEnd = new Date(currentTime.getTime() + event.duration * 60000)
+                const isSlotAvailable = !bookings.some(b => {
+                    const bookingStart = b.start
+                    const bookingEnd = b.end
+                    return (
+                        (currentTime >= bookingStart && currentTime < bookingEnd) ||
+                        (slotEnd > bookingStart && slotEnd <= bookingEnd) ||
+                        (currentTime <= bookingStart && slotEnd >= bookingEnd)
+                    )
+                })
+                if (isSlotAvailable) slots.push(format(currentTime, 'HH:mm'))
+                currentTime = slotEnd
+            }
+            availableDates.push({ date, slots })
+        }
+    }
+    return availableDates
 }
