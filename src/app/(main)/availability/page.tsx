@@ -6,7 +6,7 @@ const Page = async () => {
   const availability = await getUserAvailability()
   return (
     <div className="mx-auto">
-      <Suspense fallback={<></>}>
+      <Suspense fallback={<div>Loading Availability...</div>}>
         <Availability
           initialData={
             availability
