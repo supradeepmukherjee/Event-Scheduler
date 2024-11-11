@@ -40,5 +40,5 @@ export async function getUserByUsername(username: string) {
             }
         }
     })
-    return { success: true, user }
+    return user
 }
