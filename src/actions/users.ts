@@ -6,10 +6,8 @@ import { auth, clerkClient } from "@clerk/nextjs/server"
 export async function updateUsername(username: string) {
     const { userId } = auth()
     if (!userId) throw new Error('Unauthorised')
-    const existingUsername = await prisma.user.findUnique({
-        where: { username }
-    })
-    if (existingUsername?.id !== userId) throw new Error('Username is already taken')
+    const existingUsername = await prisma.user.findUnique({ where: { username } })
+    if (existingUsername && existingUsername.id !== userId) throw new Error('Username is already taken')
     await prisma.user.update({
         where: { clerkUserID: userId },
         data: { username }
@@ -42,5 +40,5 @@ export async function getUserByUsername(username: string) {
             }
         }
     })
-    return user
+    return { success: true, user }
 }
