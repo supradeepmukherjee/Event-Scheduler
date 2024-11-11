@@ -120,11 +120,12 @@ export async function getEventAvailability(id: string) {
     const availableDates = []
     for (let i = startDate; i <= endDate; i = addDays(i, 1)) {
         const day = format(i, 'EEEE').toUpperCase()
-        if (availability.days.find(d => d.day === day)) {
+        const dayAvailability=availability?.days?.find(d => d.day === day)
+        if (dayAvailability) {
             const date = format(i, 'yyyy-MM-dd')
             const slots = []
-            let currentTime = parseISO(`${date}T${startDate.toISOString().slice(11, 16)}`)
-            const endTime = parseISO(`${date}T${endDate.toISOString().slice(11, 16)}`)
+            let currentTime = parseISO(`${date}T${dayAvailability.startTime.toISOString().slice(11, 16)}`)
+            const endTime = parseISO(`${date}T${dayAvailability.endTime.toISOString().slice(11, 16)}`)
             const now = new Date()
             if (format(now, 'yyyy-MM-dd') === date)
                 currentTime = isBefore(currentTime, now) ? addMinutes(now, availability.timeGap) : currentTime
