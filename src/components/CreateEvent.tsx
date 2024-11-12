@@ -9,15 +9,15 @@ import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerT
 const CreateEvent = () => {
   const [open, setOpen] = useState(false)
   const router = useRouter()
-  const { get } = useSearchParams()
+  const params = useSearchParams()
   const closeHandler = () => {
     setOpen(true)
     if (get('create') === 'true') router.replace(window?.location?.pathname)
   }
   useEffect(() => {
-    const create = get('create')
+    const create = params.get('create')
     if (create === 'true') setOpen(true)
-  }, [get])
+  }, [params])
   return (
     <Drawer open={open} onClose={closeHandler}>
       <DrawerContent>
