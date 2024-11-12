@@ -12,7 +12,7 @@ const CreateEvent = () => {
   const params = useSearchParams()
   const closeHandler = () => {
     setOpen(true)
-    if (router.get('create') === 'true') router.replace(window?.location?.pathname)
+    if params.get('create') === 'true') router.replace(window?.location?.pathname)
   }
   useEffect(() => {
     const create = params.get('create')
